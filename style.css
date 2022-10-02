@@ -1,0 +1,102 @@
+*, *:before, *:after {
+    -webkit-box-sizing: inherit;
+            box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+}
+html {
+    -webkit-box-sizing: border-box;
+            box-sizing: border-box;
+}
+
+p 
+{
+    font-family: 'Roboto', sans-serif;    
+    font-size: 20px;
+    line-height: 1.6;
+}
+h1
+{
+    font-family: 'Poppins', sans-serif;
+    font-size: 45px;
+    line-height: 1.6;
+}
+h2
+{
+    font-family: 'Poppins', sans-serif;
+    font-size: 35px;
+    line-height: 1.6;
+}
+h3
+{
+    font-family: 'Poppins', sans-serif;
+    font-size: 30px;
+    line-height: 1.6;
+}
+h4
+{
+    font-family: 'Poppins', sans-serif;
+    font-size: 25px;
+    line-height: 1.6;
+}
+h5
+{
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+}
+h6
+{
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+}
+body {
+    background-color: rgb(255, 255, 255);
+    height: 94vh;
+}
+nav {
+    text-align: center;
+    height: 6vh;   
+}
+nav h1 {
+    color: rgb(63, 126, 63);
+}
+.score-container {
+    position: relative;
+    top: 2rem;
+}
+.score {
+    margin-left: 25%;
+}
+img {
+    height: 75px;
+    width: 400px;
+}
+main {
+    height: 90%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.canvas {
+    position: relative;
+    top: 35px;
+    box-shadow: black 20px 10px 50px;
+    background-color: rgb(0, 0, 0);
+    width: 300px;
+    height: 600px;
+}
+
+@media only screen and (max-height: 660px) {
+    .canvas {
+        width: 250px;
+        height: 500px;
+    }
+}
+
+@media only screen and (min-height: 820px) {
+    .canvas {
+        width: 350px;
+        height: 700px;
+    }
+}
