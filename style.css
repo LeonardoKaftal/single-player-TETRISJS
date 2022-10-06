@@ -51,7 +51,7 @@ h6
     line-height: 1.6;
 }
 body {
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(0, 0, 0);
     height: 94vh;
 }
 nav {
@@ -89,6 +89,7 @@ main {
 
 @media only screen and (max-height: 660px) {
     .canvas {
+        border: 25px solid white;
         width: 250px;
         height: 500px;
     }

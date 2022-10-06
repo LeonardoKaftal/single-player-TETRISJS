@@ -5,290 +5,272 @@ canvas.height = canvas.offsetHeight;
 const ctx = canvas.getContext("2d");
 const blockSize = canvas.height / 20;
 
+let player =  {
+    pos: {x: 4 * blockSize, y: 0},
+    matrix: undefined,
+    color: undefined
+}
+let arena = createArena();
+let gameOver = false;
 
+function createArena() {
+    const temp = [];
 
+    for (let i = 0; i < 20; i++) {
+        temp.push([])
+        for (let j = 0; j < 10; j++) {
+            temp[i][j] = 0;
+        }
+    }
+    return temp
+}
 
+function arenaSweep() {
+    let rowCount = 1;
+    outer: for (let y = arena.length -1; y > 0; y--) {
+        for (let x = 0; x < arena[y].length; x++) {
+            if (arena[y][x] === 0) {
+                continue outer;
+            }
+        }
 
-class TetrominoShape {
-    constructor(tetrominoColor,shape,shapeName) {
-        this.tetrominoColor = tetrominoColor;
-        this.shape = shape;
-        this.shapeName = shapeName;
+        const row = arena.splice(y, 1)[0].fill(0);
+        arena.unshift(row);
+        y++;
+
+        rowCount *= 2;
     }
 }
-class TetrominoPosition {
-    constructor(x,y) {
-        this.x = x;
-        this.y = y;
+
+
+function spawnTetromino() {
+    class TetrominoShape {
+        constructor(shape,shapeName) {
+            this.shape = shape;
+            this.shapeName = shapeName;
+        }
     }
+
+    const randomIndex = Math.ceil(Math.random() * 6);
+    console.log(randomIndex)
+    const blockList = [
+
+        new TetrominoShape([
+            [0,0,1],
+            [1,1,1],
+            [0,0,0],
+
+        ],""),
+        new TetrominoShape([
+            [0,1,0],
+            [1,1,1],
+            [0,0,0]
+        ],""),
+
+        new TetrominoShape([
+            [0,2,2],
+            [2,2,0],
+            [0,0,0]
+        ],""),
+
+        new TetrominoShape([
+            [3,0,0],
+            [3,3,3],
+            [0,0,0]
+        ],""),
+
+        new TetrominoShape([
+            [4,4,4,4],
+            [0,0,0,0],
+            [0,0,0,0],
+            [0,0,0,0]
+        ],"line"),
+
+        new TetrominoShape([
+            [5,5],
+            [5,5],
+            [0,0]
+        ], "square"),
+
+        new TetrominoShape([
+            [6,6,0],
+            [0,6,6],
+            [0,0,0]
+        ],""),
+    ]
+    return blockList[randomIndex].shape;
 }
 
-const blockList = [
-    new TetrominoShape("orange",[
-        [0,0,1],
-        [1,1,1],
-        [0,0,0],
 
-    ],""),
-    new TetrominoShape("violet", [
-        [0,1,0],
-        [1,1,1],
-        [0,0,0]
-    ],""),
+const colors = [
 
-    new TetrominoShape("green",[
-        [0,1,1],
-        [1,1,0],
-        [0,0,0]
-    ],""),
+    '#FF8E0D',
+    '#F538FF',
+    '#0DFF72',
+    '#1056ef',
+    '#0DC2FF',
+    '#FFE138',
+    '#FF0D72',
+];
 
-    new TetrominoShape("rgb(27, 74, 168)",[
-        [1,0,0],
-        [1,1,1],
-        [0,0,0]
-    ],""),
-
-    new TetrominoShape("rgb(0, 153, 204)",[
-        [1,1,1,1],
-        [0,0,0,0],
-        [0,0,0,0],
-        [0,0,0,0]
-    ],"line"),
-
-    new TetrominoShape("yellow",[
-        [1,1],
-        [1,1],
-        [0,0]
-    ], "square"),
-
-    new TetrominoShape("red",[
-        [1,1,0],
-        [0,1,1],
-        [0,0,0]
-    ],""),
-]
-
-let lineRotationCounter = 0;
-let oneCounter = 0;
-let randomIndex = Math.round(Math.random() * 6);
-let tempRandomIndex;
-let currentTetromino;
-let tetrominoPartCoordinate;
-
+player.matrix = spawnTetromino();
 
 function drawBoard() {
     for (let i = 0; i < 10; i++) {
         for (let j = 0; j < 20; j++) {
             ctx.strokeStyle = "rgb(194, 194, 214)";
-            ctx.strokeRect(blockSize * i, blockSize * j,blockSize,blockSize);
+            ctx.strokeRect(i * blockSize, j * blockSize,blockSize,blockSize);
         }
     }
 }
 
-function drawTetromino() {
-    let temp;
-    let tempCond = true
-    if (currentTetromino !== undefined) temp = tetrominoPartCoordinate;
-
-    tetrominoPartCoordinate = [];
-
-    tempRandomIndex = randomIndex;
-    currentTetromino = blockList[randomIndex];
-    ctx.fillStyle = currentTetromino.tetrominoColor;
-
-    for (let i = 0; i < currentTetromino.shape.length; i++) {
-        for (let j = 0; j < currentTetromino.shape[0].length; j++) {
-            if (currentTetromino.shape[i][j] === 1) {
-                tetrominoPartCoordinate.push(
-                    new TetrominoPosition(j * blockSize + canvas.width / 2,i * blockSize)
-                )
-
-
-                if (i > 0  ) {
-                    tetrominoPartCoordinate[oneCounter].y -= blockSize
-                }
-                if (temp !== undefined) tetrominoPartCoordinate[oneCounter].y = temp[oneCounter].y + blockSize;
-                ctx.fillRect(j * blockSize + canvas.width / 2,i * blockSize + tetrominoPartCoordinate[oneCounter].y,blockSize,blockSize);
-                oneCounter++;
-            }
-        }
-        tempCond = false
-    }
-    oneCounter = 0;
-}
-
-
-function rotate() {
-    const size = currentTetromino.shape.length;
-    const layer_count = size / 2;
-
-
-    if (lineRotationCounter < 1) {
-        for (let i = 0; i < layer_count; i++) {
-            const first = i;
-            const last = size - first - 1;
-
-            for (let j = first; j < last; j++) {
-                const offset = j - first;
-
-                const top = currentTetromino.shape[first][j];
-                const right_side = currentTetromino.shape[j][last];
-                const bottom = currentTetromino.shape[last][last - offset];
-                const leftSide = currentTetromino.shape[last - offset][first];
-
-                currentTetromino.shape[first][j] = leftSide;
-                currentTetromino.shape[j][last] = top;
-                currentTetromino.shape[last][last - offset] = right_side;
-                currentTetromino.shape[last - offset][first] = bottom;
-
-            }
-        }
-        if (currentTetromino.shapeName === "line") lineRotationCounter++;
-    } else {
-        if (lineRotationCounter === 1) {
-            lineRotationCounter = 0;
-            currentTetromino.shape = [[1, 1, 1, 1],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0],
-                [0, 0, 0, 0]]
-        }
-    }
-
-
-
-}
-function draw() {
-
-    setInterval(()=> {
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        drawTetromino();
-
-        drawBoard();
-
-    },500)
-
-
-}
-
-
-function startGame() {
-    // rotation listener
-    document.addEventListener("keydown", (e) => {
-        if (e.key === "w" && currentTetromino.shapeName !== "square") rotate(1)
-
-    })
-
-
-    drawBoard();
-    draw();
-}
-
-startGame();
-
-/*
-function drawTetromino() {
-    tetrominoPartCoordinate = [];
-
-    randomIndex = Math.round(Math.random() * 6);
-
-    tempRandomIndex = randomIndex;
-    currentTetromino = blockList[randomIndex];
-
-    for (let i = 0; i < currentTetromino.shape.length; i++) {
-        for (let j = 0; j < currentTetromino.shape[0].length; j++) {
-            if (currentTetromino.shape[i][j] === 1 || currentTetromino.shape[i][j] === 2) {
-                tetrominoPartCoordinate.push(new TetrominoPart(
-                    blockSize * j + canvas.width / 2 - blockSize,blockSize * i
-                ));
-            }
-        }
-    }
-}*/
-
-
-
-
-
-
-
-/*
-// used in the rotate function
-function respawnRotatedTetromino() {
-    let oneCounterForBoard = 0;
-    let toLoop = true;
-
-    for (let i = 0; i < currentTetromino.shape.length && toLoop; i++) {
-        for (let j = currentTetromino.shape[0].length - 1; j >= 0; j--) {
-            if (currentTetromino.shape[i][j] === 1) {
-                oneCounterForBoard++;
-            } else if (currentTetromino.shape[i][j] === 2) {
-                rotationPoint = oneCounterForBoard + 1;
-                toLoop = false;
-                break;
-            }
-        }
-    }
-
-    oneCounterForBoard = 0;
-
-
-    for (let i = 0; i < currentTetromino.shape.length; i++) {
-        for (let j = 0; j < currentTetromino.shape[0].length; j++) {
-            if (currentTetromino.shape[i][j] === 1 && oneCounterForBoard + 1 !== rotationPoint) {
-                    tetrominoPartCoordinate[oneCounterForBoard].x =  blockSize * j + tetrominoPartCoordinate[rotationPoint].x;
-                    tetrominoPartCoordinate[oneCounterForBoard].y =  blockSize * i + tetrominoPartCoordinate[rotationPoint].y;
-                    oneCounterForBoard++;
-            }
-            else {
-
-            }
-        }
-    }
-
-}
-
-function drawTetromino() {
-
-    //randomIndex = Math.round(Math.random() * 6);
-    randomIndex = 2
-
-    tempRandomIndex = randomIndex;
-    currentTetromino = blockList[randomIndex];
-
-    for (let i = 0; i < currentTetromino.shape.length; i++) {
-        for (let j = 0; j < currentTetromino.shape[0].length; j++) {
-            if (currentTetromino.shape[i][j] === 1) {
-                tetrisMap[i][j + 4] = 1
-                tetrominoPartCoordinate.push(
-                    new TetrominoTablePosition(i,j + 4)
-                )
+function drawPlacedTetromino() {
+    for (let i = 0; i < arena.length; i++) {
+        for (let j = 0; j < arena[0].length; j++) {
+            if (arena[i][j] !== 0) {
+                ctx.fillStyle = colors[arena[i][j]];
+                ctx.fillRect(j * blockSize,i * blockSize,blockSize,blockSize);
             }
         }
     }
 }
 
-
-function drawTetromino() {
-    ctx.fillStyle = currentTetromino.tetrominoColor;
-
-    for (let i = 0; i < 20; i++) {
-        for (let j = 0; j < 20; j++) {
-            if (tetrisMap[i][j] !== 0) {
-                ctx.fillRect(blockSize * j,blockSize * i,blockSize,blockSize)
+function drawTetromino(matrix, offset) {
+    for (let i = 0; i < matrix.length; i++) {
+        for (let j = 0; j < matrix[0].length; j++) {
+            if (matrix[i][j] !== 0) {
+                ctx.fillStyle = colors[matrix[i][j]];
+                ctx.fillRect(j * blockSize + offset.x,
+                            i * blockSize + offset.y,blockSize,blockSize);
             }
         }
     }
 }
 
 function addGravity() {
-    tetrisMap = createMap();
+    player.pos.y += blockSize;
+    dropCounter = 0;
 
-    tetrominoPartCoordinate.forEach(element => {
-        element.row += 1;
-        tetrisMap[element.row][element.column] = 1;
+    if (collide() || player.pos.y >= canvas.height) {
+        console.log("true1")
+        player.pos.y -= blockSize;
+        stopTetromino();
+    }
+}
 
-    })
+
+function mergeArena() {
+    try {
+        player.matrix.forEach((row,y) => {
+            row.forEach((value,x) => {
+                if (value !== 0) {
+                    arena[y + player.pos.y / blockSize][x + player.pos.x / blockSize] = value;
+                }
+            })
+        })
+    } catch (e) {
+        console.log(e);
+        gameOver = true;
+    }
 
 }
-*/
+
+function collide() {
+    const [m,o] = [player.matrix, player.pos];
+    for (let y = 0; y < m.length; y++) {
+        for (let x = 0; x < m[y].length; x++) {
+            if ((m[y][x] !== 0) && (arena[y + o.y / blockSize]
+            && arena[y + o.y / blockSize][x + o.x / blockSize]) !== 0) {
+                return true
+            }
+        }
+    }
+}
+
+function move(dir) {
+    player.pos.x += dir;
+    if (collide()) player.pos.x -= dir;
+
+}
+
+function moveDown() {
+    if (collide() || player.pos.y >= canvas.height) {
+        player.pos.y -= blockSize;
+        stopTetromino();
+
+    }
+    else  {
+        player.pos.y  += blockSize;
+        if (collide()) {
+            player.pos.y -= blockSize;
+            stopTetromino();
+        }
+    }
+}
+
+function stopTetromino() {
+    mergeArena();
+    player.pos.y = 0;
+    player.pos.x = blockSize * 4;
+    player.matrix = spawnTetromino();
+}
+
+function rotate(dir) {
+    for (let i = 0; i < player.matrix.length; i++) {
+        for (let j = 0; j < i; j++) {
+            [player.matrix[i][j], player.matrix[j][i]] =
+            [player.matrix[j][i], player.matrix[i][j]]
+        }
+    }
+
+    if (dir > 0) player.matrix.forEach(row => row.reverse());
+    else player.matrix.reverse();
+
+    if (collide()) {
+        if (player.pos.x < 0) player.pos.x += blockSize;
+        else player.pos.x -= blockSize;
+    }
+}
+
+document.addEventListener("keydown",e => {
+    if (e.key === "a") move(-blockSize);
+    else if (e.key === "d") move(blockSize);
+    else if (e.key === "s") moveDown();
+    else if (e.key === "w") rotate(1);
+    else if (e.key === "q") rotate(-1);
+})
+
+// fps variable
+let dropCounter = 0;
+let dropIntervall = 500;
+
+let lastTime = 0;
+function draw(time = 0) {
+    const deltaTime = time - lastTime;
+    lastTime = time;
+
+    dropCounter += deltaTime;
+
+    // tetromino gravity
+    if (dropCounter > dropIntervall) {
+        addGravity();
+    }
+
+    if (!gameOver) {
+        requestAnimationFrame(draw);
+        ctx.fillStyle = "black";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        arenaSweep()
+        drawPlacedTetromino();
+        drawTetromino(player.matrix,player.pos);
+        drawBoard();
+    } else {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "white";
+        ctx.fillText("GAME OVER",canvas.width / 2 - blockSize / 2, canvas.height / 2);
+    }
+}
+
+
+draw();
