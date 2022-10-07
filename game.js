@@ -280,8 +280,7 @@ document.addEventListener("keyup", e => {
 })
 
 document.addEventListener("keyup", e => {
-    if (e.key === "") {
-        console.log(true)
+    if (e.key === "h") {
         while (!collide() && player.pos.y / blockSize < 18) {
             player.pos.y += blockSize;
             if (collide()) {
