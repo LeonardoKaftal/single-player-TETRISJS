@@ -12,6 +12,37 @@ let player =  {
 }
 let arena = createArena();
 let gameOver = false;
+let rightPressed = false;
+let leftPressed = false;
+let downPressed = false;
+
+const keydown = e => {
+    switch(e.key) {
+        case "a":
+            rightPressed = true;
+            break;
+        case "d":
+            leftPressed = true;
+            break;
+        case "s":
+            downPressed = true;
+            break;
+    }
+}
+
+const keyup = e => {
+    switch(e.key) {
+        case "a":
+            rightPressed = false;
+            break;
+        case "d":
+            leftPressed = false;
+            break;
+        case "s":
+            downPressed = false;
+            break;
+    }
+}
 
 function createArena() {
     const temp = [];
@@ -187,23 +218,29 @@ function collide() {
     }
 }
 
-function move(dir) {
-    player.pos.x += dir;
-    if (collide()) player.pos.x -= dir;
+function move() {
+    if (rightPressed) player.pos.x -= blockSize;
+    if (leftPressed) player.pos.x += blockSize;
+    if (collide()) {
+        if (rightPressed) player.pos.x += blockSize;
+        else if (leftPressed) player.pos.x -= blockSize;
+    }
 
 }
 
 function moveDown() {
-    if (collide() || player.pos.y >= canvas.height) {
-        player.pos.y -= blockSize;
-        stopTetromino();
-
-    }
-    else  {
-        player.pos.y  += blockSize;
-        if (collide()) {
+    if (downPressed) {
+        if (collide() || player.pos.y >= canvas.height) {
             player.pos.y -= blockSize;
             stopTetromino();
+
+        }
+        else  {
+            player.pos.y  += blockSize;
+            if (collide()) {
+                player.pos.y -= blockSize;
+                stopTetromino();
+            }
         }
     }
 }
@@ -227,29 +264,46 @@ function rotate(dir) {
     else player.matrix.reverse();
 
     if (collide()) {
-        if (player.pos.x < 0) player.pos.x += blockSize;
-        else player.pos.x -= blockSize;
+        if (player.pos.x < 0) player.pos.x = 0;
+        else player.pos.x = canvas.width / 2 + blockSize * 2;
     }
 }
 
 document.addEventListener("keydown",e => {
-    if (e.key === "a") move(-blockSize);
-    else if (e.key === "d") move(blockSize);
-    else if (e.key === "s") moveDown();
-    else if (e.key === "w") rotate(1);
+    keydown(e);
+    if (e.key === "w") rotate(1);
     else if (e.key === "q") rotate(-1);
+})
+
+document.addEventListener("keyup", e => {
+    keyup(e)
+})
+
+document.addEventListener("keyup", e => {
+    if (e.key === " ") {
+        while (!collide() && player.pos.y / blockSize < 18) {
+            player.pos.y += blockSize;
+            if (collide()) {
+                player.pos.y -= blockSize;
+                stopTetromino();
+                break;
+            }
+        }
+    }
 })
 
 // fps variable
 let dropCounter = 0;
 let dropIntervall = 500;
+let lastTimeDrop = 0;
+let fpsInterval, startTime, now, then, elapsed;
 
-let lastTime = 0;
+
 function draw(time = 0) {
-    const deltaTime = time - lastTime;
-    lastTime = time;
+    const deltaDropTime = time - lastTimeDrop;
+    lastTimeDrop = time;
 
-    dropCounter += deltaTime;
+    dropCounter += deltaDropTime;
 
     // tetromino gravity
     if (dropCounter > dropIntervall) {
@@ -258,12 +312,19 @@ function draw(time = 0) {
 
     if (!gameOver) {
         requestAnimationFrame(draw);
-        ctx.fillStyle = "black";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        arenaSweep()
-        drawPlacedTetromino();
-        drawTetromino(player.matrix,player.pos);
-        drawBoard();
+        now = Date.now();
+        elapsed = now - then;
+        if (elapsed > fpsInterval) {
+            then = now - (elapsed % fpsInterval);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            arenaSweep()
+            drawPlacedTetromino();
+            drawTetromino(player.matrix,player.pos);
+            drawBoard();
+            moveDown();
+            move();
+        }
     } else {
         ctx.fillStyle = "black";
         ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -272,5 +333,7 @@ function draw(time = 0) {
     }
 }
 
-
+fpsInterval = 1000 / 20;
+then = Date.now();
+startTime = then;
 draw();
